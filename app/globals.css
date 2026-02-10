@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+
+body{
+  box-sizing: border-box;
+  text-transform: uppercase; 
+  font-family: Felipa Lato sans-serif;
+  border:none;
+  
+}
