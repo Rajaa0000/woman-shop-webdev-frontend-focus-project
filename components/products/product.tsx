@@ -1,256 +1,243 @@
 'use client'
-import { useEffect, useState } from "react";
+import { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import React, { useEffect, useState } from "react";
 import { urlFor } from "@/sanity/sanity.client";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { PortableText } from "@portabletext/react";
+import { PortableText, PortableTextComponents } from "@portabletext/react";
+import { TypedObject } from "@portabletext/types";
 import { faChevronUp, faChevronDown, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ProductsByType from "./productsByType";
 
-export default function NewProducts(props) {
+interface ProductColor {
+  name: string;
+  hex: string;
+}
+
+interface Product {
+  _id?: string;
+  name: string;
+  price: number;
+  type: string;
+  slodOrNot: boolean;
+ productImage: SanityImageSource;    // Fixed: replaced 'any'
+  productImages?: SanityImageSource[];
+  size?: string[];
+  productDesc: TypedObject | TypedObject[];
+  colors?: ProductColor[];
+}
+
+interface NewProductsProps {
+  id: string;
+}
+
+export default function NewProducts({ id }: NewProductsProps) {
   const [width, setWidth] = useState(0);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [colorsAppear, setColorAppear] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [shopNowOn, setShopNowOn] = useState(false);
+  // Helper to safely get images
+  const allImages = product ? [product.productImage, ...(product.productImages || [])].filter((img): img is SanityImageSource & { asset: object } => {
+        return (typeof img === 'object' && img !== null && 'asset' in img);
+      }) 
+    : [];
 
   useEffect(() => {
-    // Set initial width
     setWidth(window.innerWidth);
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [product, setProduct] = useState(null);
-  const [colorsAppear, setColorAppear] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [shopNowOn, setShopNowOn] = useState(false);
-  const [successMsg, setSuccessMsg] = useState(false);
-
   useEffect(() => {
     async function fetchProducts() {
       try {
-        let res = await fetch("/api/oneProduct", {
+        const res = await fetch("/api/oneProduct", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: props.id }),
+          body: JSON.stringify({ id }),
         });
-        let data = await res.json();
-        setProduct(data[0]);
+        const data = await res.json();
+        if (data && data[0]) {
+          setProduct(data[0]);
+        }
       } catch (err) {
-        console.error("Error fetching products:", err);
+        console.error("Error fetching product:", err);
       }
     }
     fetchProducts();
-  }, [props.id]);
+  }, [id]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setShopNowOn(false);
-    setSuccessMsg(true);
-    setTimeout(() => setSuccessMsg(false), 1500);
-  };
-
-  const components = {
+  const components: PortableTextComponents = {
     types: {
-      image: ({ value }) => (
-        <img src={urlFor(value).width(600).url()} alt="PortableText image" />
-      ),
-    },
-    marks: {
-      link: ({ children, value }) => (
-        <a href={value.href} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-          {children}
-        </a>
-      ),
+     image: ({ value }: { value: SanityImageSource }) => {
+        // Check if value is the object type we need
+        const isImageObject = typeof value === 'object' && value !== null && 'asset' in value;
+        
+        if (!isImageObject) return null;
+
+        return (
+          <img 
+            src={urlFor(value).width(800).url()} 
+            alt="Product detail" 
+            className="rounded-lg my-4 w-full h-auto" 
+          />
+        );
+      },
     },
     block: {
-      h1: ({ children }) => <h1 className="text-[2rem] pb-[0.5rem] font-bold underline">{children}</h1>,
-      h2: ({ children }) => <h2 className="text-[1.5rem] pb-[0.5rem] font-bold underline">{children}</h2>,
+      h1: ({ children }) => <h1 className="text-[2rem] pb-[0.5rem] font-bold">{children}</h1>,
+      normal: ({ children }) => <p className="text-gray-700 leading-relaxed pb-4">{children}</p>,
     },
   };
 
-  let colorsList = [];
-  if (product && product.colors) {
-    colorsList = product.colors.slice(1).map((item, index) => (
-      <div key={index} className="flex justify-between border-r-[2px] border-b-[2px] border-l-[2px] border-gray-300 w-[60%] px-[1rem] py-[0.5rem] items-center">
-        <div className="flex gap-[1rem] items-center ">
-          <div className="w-[1.2rem] h-[1.2rem]" style={{ backgroundColor: `${item.hex}` }}></div>
-          <p>{item.name}</p>
-        </div>
-      </div>
-    ));
-  }
+ 
 
   return (
-    <div className="w-full flex flex-col relative overflow-x-hidden">
-      {product && (
-        <div className="w-screen md:flex md:flex-col gap-[2rem] ">
-          {/* ================= DIV 1: IMAGES + INFO ================= */}
-          <div className="md:flex md:items-center md:justify-center ">
-            <div className="md:w-1/2 lg:w-[70%] ">
+    <div className="w-full flex flex-col relative overflow-x-hidden min-h-screen bg-white
+    ">
+      {product ? (
+        <div className="w-full md:flex md:flex-col gap-[2rem]">
+          <div className="md:flex md:items-center md:justify-center">
+            {/* Image Gallery */}
+            <div className="md:w-1/2 lg:w-[60%]">
               <div
                 className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative w-full"
                 onScroll={(e) => {
-                  const scrollLeft = e.currentTarget.scrollLeft;
-                  const itemWidth = e.currentTarget.clientWidth;
-                  const idx = Math.round(scrollLeft / itemWidth);
+                  const target = e.currentTarget;
+                  const idx = Math.round(target.scrollLeft / target.clientWidth);
                   setActiveIndex(idx);
                 }}
               >
-                {[product.mainImage, ...(product.images || [])].map((img, i) => (
-                  <Image
-                    key={i}
-                    src={urlFor(img).url()}
-                    alt={`${product.name}-${i}`}
-                    width={600}
-                    height={800}
-                    className="w-full md:w-[100%] h-[700px] object-cover lg:w-[50%]"
-                    quality={100}
-                  />
+                {allImages.map((img, i) => (
+                  <div key={i} className="lg:w-[50%] w-[100%] h-[900px] md:h-[900px] flex-shrink-0 flex relative">
+                    <Image
+                      src={urlFor(img).url()}
+                      alt={`${product.name}-${i}`}
+                      className="object-cover"
+                      priority={i === 0}
+                      
+                      fill
+                      
+                    />
+                  </div>
                 ))}
               </div>
 
-              <div className="flex justify-center gap-2 mt-2 lg:hidden">
-                {[product.mainImage, ...(product.images || [])].map((_, idx) => (
+              {/* Dots for mobile */}
+              <div className="flex justify-center gap-2 mt-4 lg:hidden">
+                {allImages.map((_, idx) => (
                   <div
                     key={idx}
-                    className={`w-6 h-[2px] rounded-full ${idx === activeIndex ? "bg-black" : "bg-gray-300"}`}
+                    className={`w-6 h-[2px] transition-all ${idx === activeIndex ? "bg-black" : "bg-gray-300"}`}
                   ></div>
                 ))}
               </div>
             </div>
 
-            <div className="md:w-1/2 flex flex-col items-center font-[sans] font-bold gap-[1rem] py-[1.5rem]">
-              <p className="text-[1.2rem]">{product.name}</p>
-              <p className="text-[1rem] font-[800]">{product.price}da</p>
+            {/* Product Details */}
+            <div className="md:w-1/2 flex flex-col items-center font-bold gap-[1.5rem] py-[1.5rem] px-4 text-center">
+              <h1 className="text-[1.8rem] uppercase tracking-tighter">{product.name}</h1>
+              <p className="text-[1.4rem] font-black">{product.price} DA</p>
 
-              {product.type === "clothes" && product.size && (
-                <div className="border-gray-300 border-[2px] flex">
-                  {product.size.map((item, index) => (
-                    <p className="py-[0.5rem] px-[1rem]" key={index}>{item}</p>
-                  ))}
-                </div>
-              )}
-              {product.type === "shoes" && (
-                <div className="border-gray-300 border-[2px] flex">
-                  {["37", "39", "40", "41"].map((item, index) => (
-                    <p className="py-[0.5rem] px-[1rem]" key={index}>{item}</p>
-                  ))}
-                </div>
+              {product.slodOrNot && (
+                <span className="bg-red-600 text-white px-4 py-1 rounded-full text-sm uppercase">Sold Out</span>
               )}
 
-              {/* COLORS SECTION */}
-              {product.colors && product.colors.length > 0 && (
-                width < 900 ? (
-                  <div className="flex flex-col w-full items-center">
-                    <div className="flex justify-between w-[60%] px-[1rem] py-[0.5rem] items-center border-gray-300 border-[2px]">
-                      <div className="flex items-center gap-[1rem]">
-                        <div className="w-[1.2rem] h-[1.2rem]" style={{ backgroundColor: `${product.colors[0].hex}` }}></div>
-                        <p>{product.colors[0].name}</p>
-                      </div>
-                      <p onClick={() => setColorAppear((prev) => !prev)} className="cursor-pointer">
-                        <FontAwesomeIcon icon={colorsAppear ? faChevronDown : faChevronUp} />
-                      </p>
-                    </div>
-                    <AnimatePresence>
-                      {colorsAppear && (
-                        <motion.div
-                          className="w-full flex flex-col items-center"
-                          initial={{ opacity: 0, scaleY: 0 }}
-                          animate={{ opacity: 1, scaleY: 1 }}
-                          exit={{ opacity: 0, scaleY: 0 }}
-                          transition={{ duration: 0.5, ease: "easeInOut" }}
-                          style={{ transformOrigin: "top" }}
-                        >
-                          {colorsList}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+              {/* Size Selector */}
+              {product.size && (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-widest">Sizes</p>
+                  <div className="flex border border-black divide-x divide-black">
+                    {product.type=="clothes"  && product.size.map((s, i) => (
+                      <span key={i} className="px-4 py-2 hover:bg-black hover:text-white cursor-pointer transition-colors uppercase">
+                        {s}
+                      </span>
+                    ))}
+                      {product.type=="shoes"  && ["40","41","39","38"].map((s, i) => (
+                      <span key={i} className="px-4 py-2 hover:bg-black hover:text-white cursor-pointer transition-colors uppercase">
+                        {s}
+                      </span>
+                    ))}
+                    
                   </div>
-                ) : (
-                  <div className="flex flex-col w-full items-center">
-                    <div className="flex justify-between border border-gray-400 w-[60%] px-[1rem] py-[0.5rem] items-center">
-                      <div className="flex gap-[1rem] items-center ">
-                        <div className="w-[1.2rem] h-[1.2rem]" style={{ backgroundColor: `${product.colors[0].hex}` }}></div>
-                        <p>{product.colors[0].name}</p>
-                      </div>
-                    </div>
-                    <div className="w-full flex flex-col items-center">{colorsList}</div>
-                  </div>
-                )
+                </div>
               )}
+              {/* Colors Section */}
+{product.colors && product.colors.length > 0 && (
+  <div className="flex flex-col items-center gap-2">
+    <p className="text-xs text-gray-400 uppercase tracking-widest">Available Colors</p>
+    <div className="flex flex-wrap justify-center gap-3">
+      {product.colors.map((color, i) => (
+        <div key={i} className="flex flex-col items-center gap-1 group">
+          <div 
+            className="w-8 h-8  border border-gray-200 shadow-sm transition-transform group-hover:scale-110"
+            style={{ backgroundColor: color.hex }}
+            title={color.name}
+          />
+          <span className="text-[10px] uppercase text-black font-medium">{color.name}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
               <button
-                className="py-[0.5rem] px-[2rem] bg-black text-white font-[serif] hover:bg-gray-500 transition rounded-md"
+                disabled={product.slodOrNot}
                 onClick={() => setShopNowOn(true)}
+                className="w-full max-w-xs py-4 bg-black text-white uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:bg-gray-300"
               >
-                Shop Now
+                {product.slodOrNot ? "Out of Stock" : "Add to Cart"}
               </button>
             </div>
           </div>
 
-          <div className="mx-[1rem] lg:w-[80%] lg:mx-auto normal-case">
+          {/* Description */}
+          <div className="max-w-4xl mx-auto px-6 py-12 border-t w-full">
+            <h3 className="uppercase tracking-widest mb-6 text-gray-400 text-sm">Description</h3>
             <PortableText value={product.productDesc} components={components} />
           </div>
         </div>
-      )}
-
-      {product && (
-        <div className="w-full">
-          <p className="text-[3rem] text-center py-[3rem] font-[700]">discover more of our products</p>
-          <ProductsByType type={product.type} />
+      ) : (
+        <div className="h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-black"></div>
         </div>
       )}
+   
 
-      {/* SHOP FORM MODAL */}
-      {shopNowOn && product && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg w-[90%] md:w-[50%] h-[80vh] relative shadow-xl overflow-y-auto p-6">
-            <button className="absolute top-4 right-4 text-gray-500 hover:text-black" onClick={() => setShopNowOn(false)}>
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
+    
 
-            <div className="flex flex-col items-center gap-3 mb-4">
-              <Image
-                src={urlFor(product.mainImage).width(400).url()}
-                alt={product.name}
-                width={200}
-                height={250}
-                className="rounded-md object-contain"
-              />
-              <p className="font-semibold text-lg">{product.name}</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input type="text" placeholder="Your Name" className="w-full p-3 border rounded-md" required />
-              <input type="email" placeholder="Your Email" className="w-full p-3 border rounded-md" required />
-              <input type="tel" placeholder="Phone Number" className="w-full p-3 border rounded-md" required />
-
-              <label className="font-semibold block">Choose Size</label>
-              <select className="w-full p-3 border rounded-md" required>
-                {product.type === "clothes" ? product.size?.map((s, i) => <option key={i} value={s}>{s}</option>) : 
-                 ["37", "39", "40", "41"].map((s, i) => <option key={i} value={s}>{s}</option>)}
-              </select>
-
-              <label className="font-semibold block">Choose Color</label>
-              <select className="w-full p-3 border rounded-md" required>
-                {product.colors?.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
-              </select>
-
-              <button type="submit" className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition w-full">
-                Submit
+      {/* Checkout Modal */}
+      <AnimatePresence>
+        {shopNowOn && product && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ y: 50 }} animate={{ y: 0 }}
+              className="bg-white p-8 rounded-none max-w-md w-full relative"
+            >
+              <button className="absolute top-4 right-4" onClick={() => setShopNowOn(false)}>
+                <FontAwesomeIcon icon={faTimes} size="lg" />
               </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="text-white font-semibold text-center fixed inset-0 z-[100] flex justify-center items-center bg-black/50">
-          <div className="bg-black p-8 rounded-lg">
-            <p>Buying completed successfully!</p>
-          </div>
-        </div>
-      )}
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold uppercase mb-2">Checkout</h2>
+                <div className="w-20 h-20 mx-auto relative mb-4">
+                  <Image src={urlFor(product.productImage).url()} fill className="object-cover" alt="item" />
+                </div>
+                <p>{product.name}</p>
+              </div>
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setShopNowOn(false); }}>
+                <input type="text" placeholder="Full Name" className="w-full p-3 border border-gray-300 focus:border-black outline-none" required />
+                <input type="tel" placeholder="Phone Number" className="w-full p-3 border border-gray-300 focus:border-black outline-none" required />
+                <button className="w-full bg-black text-white py-3 uppercase tracking-widest">Confirm Order</button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

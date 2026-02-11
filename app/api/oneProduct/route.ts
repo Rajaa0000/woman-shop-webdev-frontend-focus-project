@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { client } from "@/sanity/sanity.client";
 
+export async function POST(req: NextRequest) {
+  try {
+    const { id } = await req.json();
 
-export async function POST(req) {
-
-    const { id } = await req.json(); // get the id from request body
-
- const query = `*[_type == "product" && _id == $id]{
+    const query = `*[_type == "product" && _id == $id]{
       _id,
       name,
       price,
@@ -16,13 +15,13 @@ export async function POST(req) {
       colors,
       slodOrNot,
       productDesc,
-      "mainImage": productImage.asset->url,
-      "images": productImages[].asset->url
+      productImage,
+      productImages
     }`;
 
     const data = await client.fetch(query, { id });
-   
     return NextResponse.json(data);
-
-  
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
+  }
 }

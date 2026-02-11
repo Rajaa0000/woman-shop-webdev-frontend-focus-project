@@ -53,9 +53,11 @@ export default function OurStores() {
     },
   ];
 
-  const [openIndex, setOpenIndex] = useState(null);
+  // Fix 1: Type the state to accept number or null
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggleStore = (index) => {
+  // Fix 2: Type the parameter as a number
+  const toggleStore = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { client } from "@/sanity/sanity.client";
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     const { type} = await req.json(); 
     const query = `*[_type == "product" && type == $type]{
