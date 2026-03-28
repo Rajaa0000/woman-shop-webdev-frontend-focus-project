@@ -10,10 +10,7 @@ live demo :https://woman-shop-webdev-frontend-focus-pr.vercel.app/
 - [Technologies](#technologies)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Screenshots](#screenshots)
 - [Live Demo](#live-demo)
-- [Contributing](#contributing)
-- [License](#license)
 - [Contact](#contact)
 
 ---
