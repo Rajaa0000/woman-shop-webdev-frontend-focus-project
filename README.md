@@ -1,7 +1,7 @@
 # Rajaa Shop
 
 Rajaa Shop is an online women’s store created with modern web technologies. It allows users to browse and purchase products across different categories, including shoes, accessories, and clothes. The website is designed to provide a smooth shopping experience with dynamic content and an attractive interface.
-live demo :https://woman-shop-webdev-frontend-focus-pr-lime.vercel.app/
+live demo :https://woman-shop-webdev-frontend-focus-pr.vercel.app/
 ---
 
 ## Table of Contents
