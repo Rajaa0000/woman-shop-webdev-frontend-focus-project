@@ -42,7 +42,8 @@ function Nav() {
   ));
 
   return (
-    <nav className="fixed py-[1rem] bg-white flex justify-between z-[90] w-full items-center px-[1rem] border-b-[1px] border-b-gray-200">
+    <nav className="fixed py-[0.3rem] md:py-[0.7rem] bg-white flex justify-between z-[90] w-full items-center px-[1rem] border-b-[1px] border-b-gray-200
+    ">
       {/* Fix 3: Added check to ensure width is set before rendering mobile/desktop view */}
       {width !== 0 && width < 900 ? (
         <FontAwesomeIcon 

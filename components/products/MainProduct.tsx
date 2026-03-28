@@ -50,7 +50,7 @@ export default function MainProduct(props: MainProductProps) {
         />
         {/* Overlay Text */}
         <div className="absolute inset-0 flex flex-col justify-center items-center gap-4 bg-black/10">
-          <h2 className="text-[3rem] md:text-[5rem] lg:text-[7rem] uppercase leading-none font-serif text-black drop-shadow-sm">
+          <h2 className="sm:text-[4rem] lg-[5rem]  text-[2.5rem]  uppercase leading-none font-serif text-black drop-shadow-sm">
             {props.type}
           </h2>
           <button className="px-6 py-2 bg-white text-black text-sm uppercase tracking-[0.2rem] hover:bg-gray-100 transition-colors shadow-md">

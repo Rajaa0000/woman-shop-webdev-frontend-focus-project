@@ -32,7 +32,7 @@ export default function NewProducts() {
 
   return (
     <div className="py-[0.5rem] ">
-      <h1 className=" text-[3rem] border-b-[2px] font-[600] font-[sans]" >Explore Our New Products</h1>
+      <h1 className=" sm:text-[2.5rem]  text-[2rem]  border-b-[2px] font-[600] font-[sans]" >Explore Our New Products</h1>
       <div className=" w-full flex flex-col justify-center items-center md:grid md:grid-cols-2 xl:grid-cols-3 pt-[1rem]">
         {products && products.map((product) => {
           // Added optional chaining here for safety

@@ -40,7 +40,7 @@ export default function ProductsByType() {
 
   return (
     <div className="p-[2rem]">
-      <h1 className="font-[700] text-[3rem] border-b-[1px] ">Discover Our Special pieces</h1>
+      <h1 className="font-[700] sm:text-[2.5rem] text-[2rem] border-b-[1px] ">Discover Our Special pieces</h1>
       <div className=" w-full flex flex-col justify-center gap-[2rem] items-center md:items-start md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {products && products.map((product) => {
           // Use optional chaining (?.) to prevent errors if colors is undefined

@@ -26,7 +26,7 @@ export default function Layout({ children }: LayoutProps) {
       </head>
       <body>
         <Nav />
-        <main className='pt-[6rem]'>{children}</main>
+        <main className='md:pt-[5.3rem] pt-[4rem]'>{children}</main>
         <Footer />
       </body>
     </html>

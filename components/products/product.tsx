@@ -32,6 +32,7 @@ interface NewProductsProps {
 }
 
 export default function NewProducts({ id }: NewProductsProps) {
+  
   const [width, setWidth] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [colorsAppear, setColorAppear] = useState(false);
@@ -111,7 +112,7 @@ export default function NewProducts({ id }: NewProductsProps) {
                 }}
               >
                 {allImages.map((img, i) => (
-                  <div key={i} className="lg:w-[50%] w-[100%] h-[900px] md:h-[900px] flex-shrink-0 flex relative">
+                  <div key={i} className="lg:w-[50%] w-[100%] h-[90vh]  lg:h-[600px] flex-shrink-0 flex relative">
                     <Image
                       src={urlFor(img).url()}
                       alt={`${product.name}-${i}`}
@@ -194,7 +195,7 @@ export default function NewProducts({ id }: NewProductsProps) {
           </div>
 
           {/* Description */}
-          <div className="max-w-4xl mx-auto px-6 py-12 border-t w-full">
+          <div className="max-w-4xl mx-auto px-6 py-12  w-full">
             <h3 className="uppercase tracking-widest mb-6 text-gray-400 text-sm">Description</h3>
             <PortableText value={product.productDesc} components={components} />
           </div>
@@ -225,7 +226,7 @@ export default function NewProducts({ id }: NewProductsProps) {
               <div className="text-center mb-6">
                 <h2 className="text-xl font-bold uppercase mb-2">Checkout</h2>
                 <div className="w-20 h-20 mx-auto relative mb-4">
-                  <Image src={urlFor(product.productImage).url()} fill className="object-cover" alt="item" />
+                  <Image src={urlFor(product.productImage).url()} fill className="object-contain" alt="item" />
                 </div>
                 <p>{product.name}</p>
               </div>
